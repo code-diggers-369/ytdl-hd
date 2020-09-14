@@ -164,4 +164,4 @@ const createFolders = async () => {
 };
 
 // export that module
-module.exports.ytdl_hd = ytdl_hd;
+module.exports = ytdl_hd;
