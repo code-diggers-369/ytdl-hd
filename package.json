@@ -1,0 +1,22 @@
+{
+  "name": "ytdl-hd",
+  "version": "1.0.0",
+  "description": "download youtube 1080p hd video in pure javascript",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/code-diggers-369/ytdl-hd.git"
+  },
+  "keywords": [
+    "youtube"
+  ],
+  "author": "code diggers",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/code-diggers-369/ytdl-hd/issues"
+  },
+  "homepage": "https://github.com/code-diggers-369/ytdl-hd#readme"
+}
