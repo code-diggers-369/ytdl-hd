@@ -14,6 +14,6 @@ Set It On System Environment.
 # Then Use...
 
 ```
-import ytdl_hd from 'ytdl_hd';
+const ytdlhd = require("ytdl-hd");
 ytdl_hd('<Youtube_Video_Url>')
 ```
