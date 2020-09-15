@@ -2,10 +2,6 @@ const fs = require("fs-extra");
 const ytdl = require("ytdl-core");
 const util = require("util");
 
-const ffmpegPath = require("@ffmpeg-installer/ffmpeg").path;
-const ffmpeg = require("fluent-ffmpeg");
-ffmpeg.setFfmpegPath(ffmpegPath);
-
 const exec = util.promisify(require("child_process").exec);
 
 // display complte percentage
