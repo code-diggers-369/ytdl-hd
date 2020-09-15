@@ -4,7 +4,7 @@ Using This Module You Can Get 1080p to 4k Video With Audio
 
 # Instalation
 
-`npm i ytdl_hd --save`
+`npm i ytdl-hd --save`
 
 # Then Use...
 
