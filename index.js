@@ -2,6 +2,10 @@ const fs = require("fs-extra");
 const ytdl = require("ytdl-core");
 const util = require("util");
 
+const ffmpegPath = require("@ffmpeg-installer/ffmpeg").path;
+const ffmpeg = require("fluent-ffmpeg");
+ffmpeg.setFfmpegPath(ffmpegPath);
+
 const exec = util.promisify(require("child_process").exec);
 
 // display complte percentage
@@ -30,69 +34,64 @@ const ytdl_hd = async (url) => {
 const downloadFiles = async (url) => {
   try {
     // audio download
-    const audio = await audioDownload(url);
 
-    await audio.on("finish", async () => {
-      console.log("\n\naudio complte");
-      // video download
-      const video = await videoDownload(url);
+    await audioDownload(url);
 
-      video.on("info", async (info) => {
-        // fetching info
-        var titleInfo = info.videoDetails.title
-          ? info.videoDetails.title
-          : info.title;
+    // video download
+    await videoDownload(url);
 
-        const title = await titleEdit(titleInfo);
+    // joint video and audio
+    await jointAudioVideo(url);
 
-        // delete file if already exist
-        if (fs.existsSync(`download/${title}`)) {
-          // delete file if exist
-          fs.unlink(`download/${title}`, (err) => {
-            if (err) console.log(err);
-          });
-        }
-
-        // merge files
-
-        jointAudioVideo(video, title);
-      });
-    });
+    console.log("Done");
   } catch (err) {
     console.log(err);
   }
 };
 
 // joint audio and video
-const jointAudioVideo = (video, title) => {
+const jointAudioVideo = async (url) => {
   try {
-    video
-      .pipe(fs.createWriteStream("temp/video.mp4"))
-      .on("finish", async () => {
-        console.log("\n\nvideo complte");
+    const title = await ytdl(url).on("info", async (info) => {
+      var title = titleEdit(
+        info.videoDetails.title ? info.videoDetails.title : info.title
+      );
 
-        exec(
-          `ffmpeg -i temp/video.mp4 -i temp/audio.mp3 -c copy -map 0:v:0 -map 1:a:0 download/${
-            title ? title : "output.mp4"
-          }`
-        )
-          .then(() => {
-            fs.remove("temp");
-          })
-          .catch((err) => {
-            console.log(err);
-          });
-      });
+      // delete file if already exist
+      if (fs.existsSync(`download/${title}`)) {
+        // delete file if exist
+        fs.unlink(`download/${title}`, (err) => {
+          if (err) console.log(err);
+        });
+      }
+
+      await exec(
+        `ffmpeg -i temp/video.mp4 -i temp/audio.mp3 -c copy -map 0:v:0 -map 1:a:0 download/output.mp4`
+      )
+        .then(async () => {
+          await fs.remove("temp");
+          await fs.renameSync(`download/output.mp4`, `download/${title}`);
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+    });
+
+    return new Promise((resolve, reject) => {
+      title.on("end", resolve);
+
+      title.on("error", reject);
+    });
   } catch (err) {
     console.log(err);
   }
 };
 
-// edit title remove space and special characters
+// // edit title remove space and special characters
 const titleEdit = (title) => {
-  const replace = title.replace(/\||\?|\\|\/|\:|\*|"|\<|\>/g, "_");
+  const replace = title.replace(/\||\?|\\|\/|\:|\*|"|\<|\>/g, " ");
 
-  const finalTitle = replace.split(" ").join("_");
+  const finalTitle = replace.split(" ").join(" ");
 
   return finalTitle + ".mp4";
 };
@@ -112,7 +111,10 @@ const audioDownload = async (url) => {
       })
       .pipe(fs.createWriteStream("temp/audio.mp3"));
 
-    return audio;
+    return new Promise((resolve, reject) => {
+      audio.on("finish", resolve);
+      audio.on("error", reject);
+    });
   } catch (err) {
     console.log(err);
   }
@@ -125,16 +127,20 @@ const videoDownload = async (url) => {
     const video = await ytdl(url, {
       filter: "videoonly",
       quality: "highestvideo",
-    }).on("progress", (_, totalByteReceived, totalByteFile) => {
-      printProgress(
-        `Video Download ${((totalByteReceived / totalByteFile) * 100).toFixed(
-          2
-        )} %`
-      );
-    });
-    // .pipe(fs.createWriteStream("temp/video.mp4"));
+    })
+      .on("progress", (_, totalByteReceived, totalByteFile) => {
+        printProgress(
+          `Video Download ${((totalByteReceived / totalByteFile) * 100).toFixed(
+            2
+          )} %`
+        );
+      })
+      .pipe(fs.createWriteStream("temp/video.mp4"));
 
-    return video;
+    return new Promise((resolve, reject) => {
+      video.on("finish", resolve);
+      video.on("error", reject);
+    });
   } catch (err) {
     console.log(err);
   }
