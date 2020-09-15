@@ -1,6 +1,6 @@
 {
   "name": "ytdl-hd",
-  "version": "1.0.3",
+  "version": "1.0.0",
   "description": "download youtube 1080p hd video in pure javascript",
   "main": "index.js",
   "scripts": {
